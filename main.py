@@ -101,11 +101,6 @@ if __name__ == '__main__':
         functional.set_backend(net_glob, 'cupy', instance=neuron.LIFNode)
         cupy.random.seed(args.seed)
 
-    # copy weights
-    if args.pretrained_model:
-        net_glob.load_state_dict(torch.load(
-            args.pretrained_model, map_location='cpu'))
-
     # training
     loss_train_list = []
     cv_loss, cv_acc = [], []

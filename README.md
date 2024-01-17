@@ -72,3 +72,25 @@ The code is tested on a machine with 1 NVIDIA A100 GPUs with 20GB.
 
 After execution, the results are saved in a `.csv` file in the `results/` folder.
 The `.csv` file will contain all the execution parameters and the results of the attack, i.e., clean accuracy and backdoor accuracy.
+
+
+### Running the code
+
+#### N-MNIST
+
+```bash
+python main.py --dataset mnist --num_classes 10 --epoch 10 --cupy
+```
+
+Additionally the number of devices can be specified with the `--num_users` argument.
+The fraction of selected devices can be specified with the `--frac` argument.
+The poison rate can be specified with the `--epsilon` argument.
+It is important to specify the idx of the attacker with the `--attacker_idx` argument.
+If IID is used, the `--iid` argument should be specified.
+If scale is used, the `--scale` argument should be specified.
+And if multiple attackers are used, this is the Time Bandits attack, the `--split` argument should be specified along with the number of attackers.
+
+For a complete list of arguments, check the `main.py` file.
+```bash	
+python main.py --help
+```
