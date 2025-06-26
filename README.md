@@ -1,10 +1,10 @@
 # Time-Bandits
 
-Code for the paper "Time-Distributed Backdoor Attacks on Federated Spiking Learning".
+Code for the paper "Time-Distributed Backdoor Attacks on Federated Spiking Learning". Published at ESORICS 2025.
 
 ## Abstract
 
-This paper investigates the vulnerability of spiking neural networks (SNNs) and federated learning (FL) to backdoor attacks using neuromorphic data. Despite the efficiency of SNNs and the privacy advantages of FL, particularly in low-powered devices, we demonstrate that these systems are susceptible to such attacks. We first assess the viability of using FL with SNNs using neuromorphic data, showing its potential usage. Then, we evaluate the transferability of known FL attack methods to SNNs, finding that these lead to suboptimal attack performance. Therefore, we explore backdoor attacks involving single and multiple attackers to improve the attack performance. Our primary contribution is developing a novel attack strategy tailored to SNNs and FL, which distributes the backdoor trigger temporally and across malicious devices, enhancing the attack's effectiveness and stealthiness. In the best case, we achieve a 100% attack success rate, 0.13 MSE, and 98.9 SSIM. Moreover, we adapt and evaluate an existing defense against backdoor attacks, revealing its inadequacy in protecting SNNs. This study underscores the need for robust security measures in deploying SNNs and FL, particularly in the context of backdoor attacks.
+    This paper investigates the vulnerability of federated learning (FL) with spiking neural networks (SNNs) to backdoor attacks using neuromorphic data. Despite the efficiency of SNNs and the privacy advantages of FL, particularly in low-powered devices, we demonstrate that these systems are susceptible to such attacks. We first assess the viability of using FL with SNNs using neuromorphic data, showing its potential usage. Then, we evaluate the transferability of known FL attack methods to SNNs, finding that these lead to sub-optimal attack performance. Consequently, we explore backdoor attacks involving single and multiple attackers to improve the attack performance. Our main contribution is developing a novel attack strategy tailored to SNNs and FL, which distributes the backdoor trigger temporally and across malicious clients, enhancing the attack's effectiveness and stealthiness. In the best case, we achieve a 100% attack success rate, 0.13 MSE, and 98.9 SSIM. Moreover, we adapt and evaluate existing defenses against backdoor attacks, revealing their inadequacy in protecting SNNs.
 
 ## How to run
 
@@ -76,21 +76,74 @@ The `.csv` file will contain all the execution parameters and the results of the
 
 ### Running the code
 
-#### N-MNIST
+You can run experiments using [`main.py`](main.py). Below are example commands and usage patterns.
+
+#### Basic usage
 
 ```bash
-python main.py --dataset mnist --num_classes 10 --epoch 10 --cupy
+python main.py --dataset mnist --num_classes 10 --epochs 10 --local_ep 2 --num_users 10 --frac 0.5 --attacker_idx 0 --split 2 --cupy --warmup
 ```
 
-Additionally the number of devices can be specified with the `--num_users` argument.
-The fraction of selected devices can be specified with the `--frac` argument.
-The poison rate can be specified with the `--epsilon` argument.
-It is important to specify the idx of the attacker with the `--attacker_idx` argument.
-If IID is used, the `--iid` argument should be specified.
-If scale is used, the `--scale` argument should be specified.
-And if multiple attackers are used, this is the Time Bandits attack, the `--split` argument should be specified along with the number of attackers.
+### main.py usage options
 
-For a complete list of arguments, check the `main.py` file.
-```bash	
+The script `main.py` supports a variety of command-line arguments to control both the federated learning (FL) setup and the backdoor attack configuration. Below is a summary of the most important options, divided into two categories: **Federated Learning options** and **Attack options**.
+
+#### Federated Learning (FL) options
+
+- `--epochs`: Number of global FL rounds (epochs).  
+- `--num_users`: Number of clients/devices in the FL setup.  
+- `--frac`: Fraction of clients selected per round (e.g., `0.5` means 50% of clients are selected each round).  
+- `--local_ep`: Number of local epochs per client per round.  
+- `--local_bs`: Local batch size for each client.  
+- `--bs`: Batch size for testing.  
+- `--lr`: Learning rate for local training.  
+- `--lr_interval`: Intervals (as fractions of total epochs) at which to reduce the learning rate (default: `"0.33 0.66"`).  
+- `--alpha`: Degree of non-IID-ness (for data partitioning).  
+- `--lr_reduce`: Reduction factor for learning rate.  
+- `--timesteps`: Number of timesteps for SNN simulation.  
+- `--activation`: SNN activation function (`Linear` or `STDB`).  
+- `--optimizer`: Optimizer for SNN backpropagation (`SGD` or `Adam`).  
+- `--weight_decay`: Weight decay parameter for the optimizer.  
+- `--dropout`: Dropout percentage for conv layers.  
+- `--momentum`: SGD momentum.  
+- `--dataset`: Dataset to use (`mnist`, `cifar10`, `gesture`, `caltech`).  
+- `--data_path`: Path to the dataset folder.  
+- `--iid`: Use IID data partitioning (if not set, non-IID is used).  
+- `--num_classes`: Number of output classes for the dataset.  
+- `--stopping_rounds`: Rounds of early stopping.  
+- `--verbose`: Verbose print.  
+- `--seed`: Random seed for reproducibility.  
+- `--eval_every`: Frequency (in epochs) to evaluate and print metrics.  
+- `--result_dir`: Directory to store results.  
+- `--train_acc_batches`: Print training progress after this many batches.  
+- `--straggler_prob`: Probability of a client being a straggler.  
+- `--grad_noise_stdev`: Noise level for gradients.  
+- `--cupy`: Use CuPy backend for faster SNN simulation (GPU required).  
+- `--patience`: Patience for early stopping.  
+- `--warmup`: Pretrain the model before federated learning (uses 10% of total rounds).  
+
+#### Attack options
+
+- `--epsilon`: Poisoning rate (fraction of data to poison for the attacker).  
+- `--trigger_size`: Size of the backdoor trigger (e.g., `0.05` for 5% of the image).  
+- `--polarity`: Polarity of the trigger.  
+- `--pos`: Position of the trigger in the image (e.g., `top-left`).  
+- `--target_label`: Target label for the backdoor attack.  
+- `--attacker_idx`: Index of the attacker client (set to `0` or another client index to enable attack; if not set, no attack is performed).  
+- `--split`: Number of splits for the attack (for Time Bandits attack; splits the trigger among multiple clients).  
+- `--scale`: If set, attacker scales their model update to amplify the attack.  
+- `--clipping_factor`: Clipping factor for the model norm.  
+- `--cosine_sim`: Use cosine similarity for the model norm for the attacker.  
+- `--cosine_lambda`: Lambda for the cosine similarity loss.  
+
+#### Example
+
+```bash
+python main.py --dataset mnist --num_classes 10 --epochs 10 --local_ep 2 --num_users 25 --frac 0.5 --attacker_idx 0 --epsilon 0.2 --trigger_size 0.05 --scale --split 4 --iid --cupy --warmup
+```
+
+For a full list of options and their defaults, run:
+
+```bash
 python main.py --help
 ```
