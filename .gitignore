@@ -176,6 +176,7 @@ nmnist/data
 /data/gesture
 /data/caltech
 /data/asl
+/data_augmented
 *.gif
 *.png
 *.sh
